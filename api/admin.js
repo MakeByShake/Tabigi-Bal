@@ -4,9 +4,11 @@ import { checkPassword, clearCookie, isAdmin, requireAdmin, sessionCookie } from
 import { fail, getQuery, handle, int, readJson, send, str } from '../server/http.js';
 import { notifyOrder, tgCall } from '../server/telegram.js';
 
-// Vercel names it BLOB_READ_WRITE_TOKEN unless a custom prefix was chosen when connecting.
+// Older Blob connections give a BLOB_READ_WRITE_TOKEN (maybe with a custom prefix);
+// newer ones give BLOB_STORE_ID and the SDK signs in with Vercel's OIDC token on its own.
 const blobToken = () => process.env.BLOB_READ_WRITE_TOKEN
   || Object.entries(process.env).find(([k]) => k.endsWith('_READ_WRITE_TOKEN'))?.[1];
+const blobConnected = () => !!(blobToken() || process.env.BLOB_STORE_ID);
 
 const CATEGORIES = ['honey', 'bee', 'comb'];
 const STOCK = ['in', 'low', 'out'];
@@ -40,14 +42,14 @@ async function storeImage(dataUrl) {
   const ext = m[1].split('/')[1].replace('jpeg', 'jpg');
   const name = `products/${Date.now()}.${ext}`;
   if (globalThis.__TB_DEV_PUT__) return globalThis.__TB_DEV_PUT__(name, buf);
+  if (!blobConnected()) fail(503, 'Хранилище фото не подключено (Vercel Blob)');
   const token = blobToken();
-  if (!token) fail(503, 'Хранилище фото не подключено (BLOB_READ_WRITE_TOKEN)');
   const blob = await put(name, buf, { access: 'public', contentType: m[1], addRandomSuffix: true, cacheControlMaxAge: 31536000, token });
   return blob.url;
 }
 
 async function dropImage(url) {
-  if (!url || !/blob\.vercel-storage\.com/.test(url) || !blobToken()) return;
+  if (!url || !/blob\.vercel-storage\.com/.test(url) || !blobConnected()) return;
   try { await del(url, { token: blobToken() }); } catch (e) { console.error('blob delete failed', e.message); }
 }
 
@@ -190,7 +192,7 @@ const actions = {
     send(res, 200, {
       site,
       telegram: { connected: !!(telegram.token && telegram.chatId), token: maskToken(telegram.token), chatId: telegram.chatId },
-      storage: { blob: !!blobToken() || !!globalThis.__TB_DEV_PUT__ },
+      storage: { blob: blobConnected() || !!globalThis.__TB_DEV_PUT__ },
     });
   },
   async settingsSave(req, res) {
