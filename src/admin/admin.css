@@ -105,7 +105,7 @@ select { font: inherit; }
 .order-items li { display: flex; justify-content: space-between; gap: 12px; }
 .order-items li span:last-child { white-space: nowrap; font-weight: 700; }
 .order-card > footer { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 14px 14px; border-top: 1px solid var(--line); background: var(--cream); }
-.order-total { font-size: 1.25rem; font-weight: 800; }
+.order-total { font-size: 1.25rem; font-weight: 800; white-space: nowrap; }
 .order-actions { display: flex; align-items: center; gap: 6px; }
 .order-actions .icon-btn { color: var(--ink-3); }
 

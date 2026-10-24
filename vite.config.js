@@ -1,7 +1,7 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import { fileURLToPath } from 'node:url'
-import { mkdir, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { randomBytes } from 'node:crypto'
 
 const root = fileURLToPath(new URL('.', import.meta.url))
@@ -35,6 +35,15 @@ function localApi() {
         if (req.url === '/admin' || req.url.startsWith('/admin?') || req.url === '/admin/') {
           req.url = '/admin.html'
           return next()
+        }
+        // Serve freshly uploaded photos directly (Vite's public-file list can lag behind new files).
+        const up = /^\/uploads\/([\w.-]+)$/.exec(req.url)
+        if (up) {
+          try {
+            const buf = await readFile(`${root}public/uploads/${up[1]}`)
+            res.setHeader('Content-Type', up[1].endsWith('.webp') ? 'image/webp' : up[1].endsWith('.png') ? 'image/png' : 'image/jpeg')
+            return res.end(buf)
+          } catch { return next() }
         }
         const m = /^\/api\/([\w-]+)(?:\?|$)/.exec(req.url)
         if (!m) return next()
