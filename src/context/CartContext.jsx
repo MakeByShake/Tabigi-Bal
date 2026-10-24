@@ -1,14 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CartContext } from './cart';
-import { products } from '../data/products';
-import { whatsappUrl } from '../lib/config';
+import { useSite } from './site';
 import { formatPrice } from '../lib/format';
 
 const CART_KEY = 'tabigiBalCart';
 const CUSTOMER_KEY = 'tabigiBalCustomer';
-
-const productById = new Map(products.map((p) => [p.id, p]));
-
 const EMPTY_CUSTOMER = { name: '', phone: '', method: 'delivery', address: '', comment: '' };
 
 function readJson(key, fallback) {
@@ -28,17 +24,20 @@ function writeJson(key, value) {
   }
 }
 
-// Only id + quantity are stored. Name, price and photo always come from the
-// current catalog, so a price change never leaves stale prices in old carts.
+// Only id + quantity are stored; name, price and stock always come from the live catalog.
 function loadCart() {
   const saved = readJson(CART_KEY, []);
   if (!Array.isArray(saved)) return [];
   return saved
-    .filter((item) => productById.has(String(item.id)) && item.quantity > 0)
+    .filter((item) => item && item.id != null && item.quantity > 0)
     .map((item) => ({ id: String(item.id), quantity: Math.min(99, Math.floor(item.quantity)) }));
 }
 
+// Short code the shop can match between WhatsApp and the admin orders list.
+const newOrderCode = () => `TB-${Math.floor(1000 + Math.random() * 9000)}${String.fromCharCode(65 + Math.floor(Math.random() * 26))}`;
+
 export function CartProvider({ children }) {
+  const { productById, wa, settings } = useSite();
   const [items, setItems] = useState(loadCart);
   const [customer, setCustomer] = useState(() => ({ ...EMPTY_CUSTOMER, ...readJson(CUSTOMER_KEY, {}) }));
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -65,33 +64,41 @@ export function CartProvider({ children }) {
   }, []);
 
   const addToCart = useCallback((id) => {
+    const product = productById.get(id);
+    if (!product || product.stock === 'out') return;
     setItems((prev) => {
       const existing = prev.find((i) => i.id === id);
       if (existing) return prev.map((i) => (i.id === id ? { ...i, quantity: Math.min(99, i.quantity + 1) } : i));
       return [...prev, { id, quantity: 1 }];
     });
-    const product = productById.get(id);
-    if (product) showToast(`«${product.name}» себетке қосылды`);
-  }, [showToast]);
+    showToast(`«${product.name}» себетке қосылды`);
+  }, [productById, showToast]);
 
   const removeFromCart = useCallback((id) => setItems((prev) => prev.filter((i) => i.id !== id)), []);
   const clearCart = useCallback(() => setItems([]), []);
 
   const cart = useMemo(
-    () => items.map((i) => ({ ...productById.get(i.id), quantity: i.quantity })),
-    [items],
+    () => items
+      .filter((i) => productById.has(i.id))
+      .map((i) => {
+        const p = productById.get(i.id);
+        return { ...p, quantity: i.quantity, available: p.stock !== 'out' };
+      }),
+    [items, productById],
   );
-  const totalItems = useMemo(() => items.reduce((sum, i) => sum + i.quantity, 0), [items]);
-  const totalPrice = useMemo(() => cart.reduce((sum, i) => sum + i.price * i.quantity, 0), [cart]);
+  const orderable = useMemo(() => cart.filter((i) => i.available), [cart]);
+  const totalItems = useMemo(() => orderable.reduce((sum, i) => sum + i.quantity, 0), [orderable]);
+  const totalPrice = useMemo(() => orderable.reduce((sum, i) => sum + i.price * i.quantity, 0), [orderable]);
   const getQuantity = useCallback((id) => items.find((i) => i.id === id)?.quantity ?? 0, [items]);
 
   const updateCustomer = useCallback((patch) => setCustomer((prev) => ({ ...prev, ...patch })), []);
 
-  const buildOrderMessage = useCallback(() => {
-    const lines = ['Сәлеметсіз бе! Tabigi Bal-ға тапсырыс:', ''];
-    cart.forEach((item, idx) => {
-      const price = item.priceDisplay?.includes('-') ? ` (баға: ${item.priceDisplay})` : '';
-      lines.push(`${idx + 1}. ${item.name} × ${item.quantity} = ${formatPrice(item.price * item.quantity)}${price}`);
+  const buildOrderMessage = useCallback((code) => {
+    const lines = [`Сәлеметсіз бе! Tabigi Bal-ға тапсырыс №${code}:`, ''];
+    orderable.forEach((item, idx) => {
+      const unit = item.unit ? ` (${item.unit})` : '';
+      const range = item.priceNote ? ` (баға: ${item.priceNote} ₸)` : '';
+      lines.push(`${idx + 1}. ${item.name}${unit} × ${item.quantity} = ${formatPrice(item.price * item.quantity)}${range}`);
     });
     lines.push('', `Барлығы: ${formatPrice(totalPrice)}`, '');
     lines.push(`Аты: ${customer.name.trim()}`);
@@ -100,16 +107,26 @@ export function CartProvider({ children }) {
       lines.push('Алу тәсілі: Жеткізу');
       lines.push(`Мекенжай: ${customer.address.trim()}`);
     } else {
-      lines.push('Алу тәсілі: Өзім алып кетемін');
+      lines.push(`Алу тәсілі: Өзім алып кетемін (${settings.address})`);
     }
     if (customer.comment.trim()) lines.push(`Пікір: ${customer.comment.trim()}`);
     return lines.join('\n');
-  }, [cart, customer, totalPrice]);
+  }, [orderable, customer, totalPrice, settings.address]);
 
   const checkout = useCallback(() => {
-    window.open(whatsappUrl(buildOrderMessage()), '_blank', 'noopener');
+    if (!orderable.length) return;
+    const code = newOrderCode();
+    // Open WhatsApp synchronously (inside the click) so phones don't block it as a popup.
+    window.open(wa(buildOrderMessage(code)), '_blank', 'noopener');
+    // Save the order for the admin panel; keepalive lets it finish even if the tab goes away.
+    fetch('/api/order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      keepalive: true,
+      body: JSON.stringify({ code, customer, items: orderable.map((i) => ({ id: i.id, quantity: i.quantity })) }),
+    }).catch(() => {});
     showToast('Тапсырыс WhatsApp-та ашылды');
-  }, [buildOrderMessage, showToast]);
+  }, [orderable, wa, buildOrderMessage, customer, showToast]);
 
   const value = {
     cart,

@@ -1,7 +1,7 @@
-import { CONTACTS, whatsappUrl } from '../lib/config';
+import { useSite } from '../context/site';
 import { ChevronDownIcon, WhatsAppIcon } from './Icons';
 
-const FAQ = [
+const buildFaq = (s) => [
   {
     q: 'Бал неге қатайып қалды? Бұл қалыпты ма?',
     a: 'Иә. Кристалдану — табиғи балдың қалыпты қасиеті, ол балдың сапасы мен пайдасын төмендетпейді. Сұйық күйге келтіру үшін банканы 40°C-тан аспайтын жылы суға қойыңыз.',
@@ -12,11 +12,11 @@ const FAQ = [
   },
   {
     q: 'Жеткізу бар ма?',
-    a: 'Иә, Шамалған бойынша жеткізіп береміз. Басқа елді мекендерге жеткізу жөнінде WhatsApp арқылы жазыңыз — келісеміз.',
+    a: `Иә. ${s.delivery} Толығырақ WhatsApp арқылы жазыңыз.`,
   },
   {
     q: 'Өзім келіп алуыма бола ма?',
-    a: `Әрине. Мекенжай: ${CONTACTS.address}. Жұмыс уақыты: ${CONTACTS.hours}. Келер алдында қоңырау шалуды ұсынамыз.`,
+    a: `Әрине. Мекенжай: ${s.address}. Жұмыс уақыты: ${s.hours}. Келер алдында қоңырау шалуды ұсынамыз.`,
   },
   {
     q: 'Қай балды таңдаған дұрыс?',
@@ -25,6 +25,8 @@ const FAQ = [
 ];
 
 export default function Faq() {
+  const { settings, wa } = useSite();
+  const faq = buildFaq(settings);
   return (
     <section id="faq" className="section faq">
       <div className="container faq-inner">
@@ -32,12 +34,12 @@ export default function Faq() {
           <p className="eyebrow">Сұрақ-жауап</p>
           <h2 className="section-heading">Жиі қойылатын сұрақтар</h2>
           <p className="section-sub">Жауап таппадыңыз ба? Бізге тікелей жазыңыз — қуана жауап береміз.</p>
-          <a href={whatsappUrl('Сәлеметсіз бе! Сұрағым бар.')} target="_blank" rel="noopener noreferrer" className="btn btn-whatsapp">
+          <a href={wa('Сәлеметсіз бе! Сұрағым бар.')} target="_blank" rel="noopener noreferrer" className="btn btn-whatsapp">
             <WhatsAppIcon /> Сұрақ қою
           </a>
         </div>
         <div className="faq-list">
-          {FAQ.map((item, i) => (
+          {faq.map((item, i) => (
             <details key={item.q} className="faq-item" open={i === 0}>
               <summary>
                 {item.q}

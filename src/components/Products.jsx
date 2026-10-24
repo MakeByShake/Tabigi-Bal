@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
-import { CATEGORIES, products } from '../data/products';
+import { CATEGORIES } from '../data/products';
+import { useSite } from '../context/site';
 import ProductCard from './ProductCard';
 import ProductModal from './ProductModal';
 import { SearchIcon, CloseIcon } from './Icons';
@@ -11,17 +12,20 @@ const SORTS = [
 ];
 
 export default function Products() {
+  const { products, status } = useSite();
   const [category, setCategory] = useState('all');
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState('default');
-  const [selected, setSelected] = useState(null);
-  const closeModal = useCallback(() => setSelected(null), []);
+  const [selectedId, setSelectedId] = useState(null);
+  const closeModal = useCallback(() => setSelectedId(null), []);
+  const openProduct = useCallback((p) => setSelectedId(p.id), []);
+  const selected = selectedId ? products.find((p) => p.id === selectedId) : null;
 
   const counts = useMemo(() => {
     const c = { all: products.length };
     products.forEach((p) => { c[p.category] = (c[p.category] || 0) + 1; });
     return c;
-  }, []);
+  }, [products]);
 
   const visible = useMemo(() => {
     const q = query.trim().toLocaleLowerCase('kk');
@@ -32,8 +36,9 @@ export default function Products() {
     if (sort !== 'default') {
       list = [...list].sort((a, b) => (sort === 'asc' ? a.price - b.price : b.price - a.price));
     }
-    return list;
-  }, [category, query, sort]);
+    // Out-of-stock items always go to the end.
+    return [...list].sort((a, b) => (a.stock === 'out') - (b.stock === 'out'));
+  }, [products, category, query, sort]);
 
   const reset = () => { setCategory('all'); setQuery(''); setSort('default'); };
 
@@ -48,7 +53,7 @@ export default function Products() {
 
         <div className="catalog-toolbar">
           <div className="chips" role="tablist" aria-label="Санаттар">
-            {CATEGORIES.map((c) => (
+            {CATEGORIES.filter((c) => c.id === 'all' || counts[c.id]).map((c) => (
               <button
                 key={c.id}
                 role="tab"
@@ -80,9 +85,13 @@ export default function Products() {
           </div>
         </div>
 
-        {visible.length > 0 ? (
+        {status === 'loading' ? (
+          <div className="products-grid" aria-busy="true">
+            {Array.from({ length: 8 }, (_, i) => <div key={i} className="product-card skeleton" />)}
+          </div>
+        ) : visible.length > 0 ? (
           <div className="products-grid">
-            {visible.map((p) => <ProductCard key={p.id} product={p} onOpen={setSelected} />)}
+            {visible.map((p) => <ProductCard key={p.id} product={p} onOpen={openProduct} />)}
           </div>
         ) : (
           <div className="empty-state">

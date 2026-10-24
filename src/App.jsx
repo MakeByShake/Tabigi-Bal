@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
 import { CartProvider } from './context/CartContext';
+import { SiteProvider } from './context/SiteProvider';
+import AnnouncementBar from './components/AnnouncementBar';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import Products from './components/Products';
@@ -34,7 +36,9 @@ function useReveal() {
 export default function App() {
   useReveal();
   return (
+    <SiteProvider>
     <CartProvider>
+      <AnnouncementBar />
       <Header />
       <main>
         <Hero />
@@ -49,5 +53,6 @@ export default function App() {
       <FloatingActions />
       <Notification />
     </CartProvider>
+    </SiteProvider>
   );
 }

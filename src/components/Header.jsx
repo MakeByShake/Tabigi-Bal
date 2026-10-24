@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useCart } from '../context/cart';
-import { CONTACTS, LOGO_SRC, whatsappUrl } from '../lib/config';
+import { useSite } from '../context/site';
+import { LOGO_SRC } from '../lib/config';
 import { CartIcon, CloseIcon, InstagramIcon, ListIcon, TelegramIcon, WhatsAppIcon } from './Icons';
 
 const NAV = [
@@ -15,6 +16,7 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { totalItems, openCart } = useCart();
+  const { settings: s, wa } = useSite();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -51,17 +53,17 @@ export default function Header() {
             ))}
           </ul>
           <div className="nav-social">
-            <a href={whatsappUrl()} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"><WhatsAppIcon /></a>
-            <a href={CONTACTS.telegram} target="_blank" rel="noopener noreferrer" aria-label="Telegram"><TelegramIcon /></a>
-            <a href={CONTACTS.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram"><InstagramIcon /></a>
+            <a href={wa()} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"><WhatsAppIcon /></a>
+            <a href={s.telegram} target="_blank" rel="noopener noreferrer" aria-label="Telegram"><TelegramIcon /></a>
+            <a href={s.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram"><InstagramIcon /></a>
           </div>
         </nav>
         {menuOpen && <div className="nav-backdrop" onClick={close} aria-hidden="true" />}
 
         <div className="header-actions">
           <div className="header-social">
-            <a href={CONTACTS.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="icon-btn"><InstagramIcon /></a>
-            <a href={CONTACTS.telegram} target="_blank" rel="noopener noreferrer" aria-label="Telegram" className="icon-btn"><TelegramIcon /></a>
+            <a href={s.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="icon-btn"><InstagramIcon /></a>
+            <a href={s.telegram} target="_blank" rel="noopener noreferrer" aria-label="Telegram" className="icon-btn"><TelegramIcon /></a>
           </div>
           <button className="cart-btn" onClick={openCart} aria-label={`Себет, ${totalItems} тауар`}>
             <CartIcon />

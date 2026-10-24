@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local dev data (PGlite database, uploaded photos)
+.data
+public/uploads
+.env
+.vercel

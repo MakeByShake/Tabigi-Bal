@@ -1,5 +1,5 @@
 import { useCart } from '../context/cart';
-import { whatsappUrl } from '../lib/config';
+import { useSite } from '../context/site';
 import { formatPrice, itemsLabel } from '../lib/format';
 import { CartIcon, WhatsAppIcon } from './Icons';
 
@@ -7,12 +7,13 @@ import { CartIcon, WhatsAppIcon } from './Icons';
 // Desktop: a round WhatsApp button for quick questions.
 export default function FloatingActions() {
   const { totalItems, totalPrice, openCart, isCartOpen } = useCart();
+  const { wa } = useSite();
   const showBar = totalItems > 0 && !isCartOpen;
 
   return (
     <>
       <a
-        href={whatsappUrl('Сәлеметсіз бе! Сұрағым бар.')}
+        href={wa('Сәлеметсіз бе! Сұрағым бар.')}
         target="_blank"
         rel="noopener noreferrer"
         className={`fab-whatsapp ${showBar ? 'is-raised' : ''}`}

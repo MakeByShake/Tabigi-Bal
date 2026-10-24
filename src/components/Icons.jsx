@@ -39,6 +39,7 @@ export const CheckIcon = make(<path d="M5 12.5l4.5 4.5L19 7.5" />);
 export const ArrowRightIcon = make(<path d="M5 12h14M13 6l6 6-6 6" />);
 export const ChevronDownIcon = make(<path d="M6 9l6 6 6-6" />);
 export const ListIcon = make(<path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01" />);
+export const BellIcon = make(<><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z" /><path d="M10 20.5a2 2 0 0 0 4 0" /></>);
 export const ChatIcon = make(<path d="M4 5h16v11H9l-5 4z" />);
 
 export const WhatsAppIcon = (props) => (

@@ -1,8 +1,8 @@
-import { products } from '../data/products';
-import { whatsappUrl } from '../lib/config';
+import { useSite } from '../context/site';
 import { ArrowRightIcon, LeafIcon, TruckIcon, WhatsAppIcon } from './Icons';
 
 export default function Hero() {
+  const { products, wa } = useSite();
   return (
     <section className="hero" id="top">
       <div className="hero-pattern" aria-hidden="true" />
@@ -19,7 +19,7 @@ export default function Hero() {
             <a href="#products" className="btn btn-primary btn-lg">
               Каталогты көру <ArrowRightIcon />
             </a>
-            <a href={whatsappUrl('Сәлеметсіз бе! Бал туралы сұрағым бар.')} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-lg">
+            <a href={wa('Сәлеметсіз бе! Бал туралы сұрағым бар.')} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-lg">
               <WhatsAppIcon /> Кеңес алу
             </a>
           </div>

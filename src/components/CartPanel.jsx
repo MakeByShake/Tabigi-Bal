@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useCart } from '../context/cart';
-import { CONTACTS } from '../lib/config';
+import { useSite } from '../context/site';
 import { formatPrice, itemsLabel } from '../lib/format';
 import { CartIcon, CloseIcon, PinIcon, TrashIcon, TruckIcon, WhatsAppIcon } from './Icons';
 import QuantityStepper from './QuantityStepper';
@@ -13,6 +13,7 @@ export default function CartPanel() {
     cart, totalItems, totalPrice, isCartOpen, closeCart,
     setQuantity, removeFromCart, clearCart, customer, updateCustomer, checkout,
   } = useCart();
+  const { settings: site } = useSite();
   const [step, setStep] = useState('cart');
   const [touched, setTouched] = useState(false);
   const panelRef = useRef(null);
@@ -91,7 +92,7 @@ export default function CartPanel() {
           <>
             <ul className="drawer-body cart-list">
               {cart.map((item) => (
-                <li key={item.id} className="cart-row">
+                <li key={item.id} className={`cart-row ${item.available ? '' : 'is-out'}`}>
                   <img src={item.image} alt="" loading="lazy" />
                   <div className="cart-row-info">
                     <div className="cart-row-top">
@@ -100,7 +101,9 @@ export default function CartPanel() {
                         <TrashIcon width={18} height={18} />
                       </button>
                     </div>
-                    <span className="muted small">{formatPrice(item.price)} / дана{item.priceDisplay?.includes('-') ? ' (шамамен)' : ''}</span>
+                    {item.available
+                      ? <span className="muted small">{formatPrice(item.price)} / {item.unit || 'дана'}{item.priceNote ? ' (шамамен)' : ''}</span>
+                      : <span className="out-label small">Қазір жоқ — тапсырысқа кірмейді</span>}
                     <div className="cart-row-bottom">
                       <QuantityStepper value={item.quantity} onChange={(q) => setQuantity(item.id, q)} size="sm" label={`${item.name}, саны`} />
                       <strong>{formatPrice(item.price * item.quantity)}</strong>
@@ -152,14 +155,14 @@ export default function CartPanel() {
                   <span>Мекенжай *</span>
                   <input type="text" autoComplete="street-address" placeholder="Көше, үй, пәтер" {...field('address')} />
                   {touched && errors.address && <em>{errors.address}</em>}
-                  <small className="muted">Шамалған бойынша жеткіземіз. Басқа аймақтар бойынша келісеміз.</small>
+                  <small className="muted">{site.delivery}</small>
                 </label>
               ) : (
                 <div className="pickup-note">
                   <PinIcon />
                   <div>
-                    <strong>{CONTACTS.address}</strong>
-                    <span className="muted small">{CONTACTS.hours}</span>
+                    <strong>{site.address}</strong>
+                    <span className="muted small">{site.hours}</span>
                   </div>
                 </div>
               )}
