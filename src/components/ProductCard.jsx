@@ -1,30 +1,36 @@
-import { useCart } from '../context/CartContext';
+import { useCart } from '../context/cart';
+import { displayPrice } from '../lib/format';
+import { CartIcon } from './Icons';
+import QuantityStepper from './QuantityStepper';
 
-export default function ProductCard({ product }) {
-  const { addToCart } = useCart();
-
-  const handleAddToCart = () => {
-    addToCart({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      image: product.image
-    });
-  };
+export default function ProductCard({ product, onOpen }) {
+  const { addToCart, setQuantity, getQuantity } = useCart();
+  const qty = getQuantity(product.id);
 
   return (
-    <div className="product-card">
-      <img src={product.image} alt={product.name} className="product-image" />
-      <div className="product-info">
-        <h3 className="product-title">{product.name}</h3>
-        <p className="product-description">{product.description}</p>
-        <div className="product-price">
-          {product.priceDisplay || `${product.price} ₸`}
+    <article className="product-card">
+      <button className="product-media" onClick={() => onOpen(product)} aria-label={`${product.name} — толығырақ`}>
+        <img src={product.image} alt={product.name} loading="lazy" decoding="async" />
+        {product.badge && <span className="badge">{product.badge}</span>}
+      </button>
+      <div className="product-body">
+        <h3 className="product-title">
+          <button onClick={() => onOpen(product)}>{product.name}</button>
+        </h3>
+        <p className="product-desc">{product.description}</p>
+        <div className="product-foot">
+          <div className="product-price">
+            {displayPrice(product)}
+          </div>
+          {qty > 0 ? (
+            <QuantityStepper value={qty} onChange={(q) => setQuantity(product.id, q)} size="sm" label={`${product.name}, саны`} />
+          ) : (
+            <button className="btn btn-primary btn-sm add-btn" onClick={() => addToCart(product.id)}>
+              <CartIcon /> Қосу
+            </button>
+          )}
         </div>
-        <button className="add-to-cart-btn" onClick={handleAddToCart}>
-          Себетке қосу
-        </button>
       </div>
-    </div>
+    </article>
   );
 }

@@ -1,68 +1,82 @@
-import { useState } from 'react';
-import { useCart } from '../context/CartContext';
+import { useEffect, useState } from 'react';
+import { useCart } from '../context/cart';
+import { CONTACTS, LOGO_SRC, whatsappUrl } from '../lib/config';
+import { CartIcon, CloseIcon, InstagramIcon, ListIcon, TelegramIcon, WhatsAppIcon } from './Icons';
+
+const NAV = [
+  { href: '#products', label: 'Өнімдер' },
+  { href: '#about', label: 'Біз туралы' },
+  { href: '#how', label: 'Қалай тапсырыс беру' },
+  { href: '#faq', label: 'Сұрақтар' },
+  { href: '#contact', label: 'Байланыс' },
+];
 
 export default function Header() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { getTotalItems, openCart } = useCart();
-  const totalItems = getTotalItems();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const { totalItems, openCart } = useCart();
 
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
-  };
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
-  const closeMobileMenu = () => {
-    setMobileMenuOpen(false);
-  };
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e) => e.key === 'Escape' && setMenuOpen(false);
+    document.addEventListener('keydown', onKey);
+    document.body.classList.add('no-scroll');
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.classList.remove('no-scroll');
+    };
+  }, [menuOpen]);
+
+  const close = () => setMenuOpen(false);
 
   return (
-    <header>
-      <div className="logo">
-        <img src="/images/Tabigi Bal Logo.jpg" alt="Tabigi Ball Logo" />
-        <h2>Tabigi Bal</h2>
-      </div>
+    <header className={`site-header ${scrolled ? 'is-scrolled' : ''}`}>
+      <div className="container header-inner">
+        <a href="#top" className="brand" aria-label="Tabigi Bal — басты бет">
+          <img src={LOGO_SRC} alt="" width="44" height="44" />
+          <span className="brand-name">Tabigi <span>Bal</span></span>
+        </a>
 
-      <ul className={mobileMenuOpen ? 'active' : ''}>
-        <li><a href="#welcome" onClick={closeMobileMenu}>Біз Туралы</a></li>
-        <li><a href="#products" onClick={closeMobileMenu}>Біздің өнімдер</a></li>
-        <li><a href="#why-us" onClick={closeMobileMenu}>Не үшін біз?</a></li>
-        <li><a href="#contact" onClick={closeMobileMenu}>Хабарда болу үшін</a></li>
-      </ul>
+        <nav className={`main-nav ${menuOpen ? 'is-open' : ''}`} aria-label="Негізгі мәзір">
+          <ul>
+            {NAV.map((item) => (
+              <li key={item.href}><a href={item.href} onClick={close}>{item.label}</a></li>
+            ))}
+          </ul>
+          <div className="nav-social">
+            <a href={whatsappUrl()} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"><WhatsAppIcon /></a>
+            <a href={CONTACTS.telegram} target="_blank" rel="noopener noreferrer" aria-label="Telegram"><TelegramIcon /></a>
+            <a href={CONTACTS.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram"><InstagramIcon /></a>
+          </div>
+        </nav>
+        {menuOpen && <div className="nav-backdrop" onClick={close} aria-hidden="true" />}
 
-      <div className="icons">
-        <div className="cart-icon-container" onClick={openCart}>
-          <img src="/images/cart.png" alt="Shopping Cart" />
-          {totalItems > 0 && (
-            <span className="cart-count">{totalItems}</span>
-          )}
+        <div className="header-actions">
+          <div className="header-social">
+            <a href={CONTACTS.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="icon-btn"><InstagramIcon /></a>
+            <a href={CONTACTS.telegram} target="_blank" rel="noopener noreferrer" aria-label="Telegram" className="icon-btn"><TelegramIcon /></a>
+          </div>
+          <button className="cart-btn" onClick={openCart} aria-label={`Себет, ${totalItems} тауар`}>
+            <CartIcon />
+            <span className="cart-btn-label">Себет</span>
+            {totalItems > 0 && <span className="cart-badge" key={totalItems}>{totalItems}</span>}
+          </button>
+          <button
+            className="icon-btn menu-btn"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label={menuOpen ? 'Мәзірді жабу' : 'Мәзірді ашу'}
+            aria-expanded={menuOpen}
+          >
+            {menuOpen ? <CloseIcon /> : <ListIcon />}
+          </button>
         </div>
-        <a href="https://www.instagram.com/tabigi_balkz?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer">
-          <img src="/images/instagram.png" alt="Instagram" />
-        </a>
-        <a href="https://t.me/+77007380979" target="_blank" rel="noopener noreferrer">
-          <img src="/images/telegram.png" alt="Telegram" />
-        </a>
-        <a href="https://wa.me/+7007380979" target="_blank" rel="noopener noreferrer">
-          <img src="/images/apple.png" alt="WhatsApp" />
-        </a>
-      </div>
-
-      {/* Mobile icons container */}
-      <div className="mobile-icons">
-        <div className="mobile-cart-icon" onClick={openCart}>
-          <img src="/images/cart.png" alt="Mobile Cart" />
-          {totalItems > 0 && (
-            <span className="cart-count">{totalItems}</span>
-          )}
-        </div>
-        <button 
-          className={`mobile-menu-btn ${mobileMenuOpen ? 'active' : ''}`}
-          onClick={toggleMobileMenu}
-          aria-label="Toggle menu"
-        >
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
       </div>
     </header>
   );

@@ -1,55 +1,45 @@
+import { CONTACTS, LOGO_SRC, whatsappUrl } from '../lib/config';
+import { ClockIcon, InstagramIcon, MailIcon, PhoneIcon, PinIcon, TelegramIcon, WhatsAppIcon } from './Icons';
+
 export default function Footer() {
   return (
-    <footer id="contact">
-      <div className="footer-container">
-        <div className="footer-info">
-          <div className="footer-logo">
-            <img src="/images/Tabigi Bal Logo.jpg" alt="Tabigi Ball Logo" />
-            <h3>Tabigi Bal</h3>
-          </div>
-          <p className="footer-description">
-            Табиғи бал өндірісі. Көпжылдық тәжірибе мен араға деген сүйіспеншілік арқылы жұмыс істейміз. Табиғат пен оның сыйлаған байлығына сүйене отырып, біздің араларымыз ұрпақтан-ұрпаққа ең таза бал өндіруді жалғастыруда.
+    <footer id="contact" className="site-footer">
+      <div className="container footer-grid">
+        <div className="footer-brand">
+          <a href="#top" className="brand">
+            <img src={LOGO_SRC} alt="" width="44" height="44" />
+            <span className="brand-name">Tabigi <span>Bal</span></span>
+          </a>
+          <p>
+            Табиғи бал өндірісі. Көпжылдық тәжірибе мен араға деген сүйіспеншілік арқылы жұмыс істейміз.
           </p>
           <div className="footer-social">
-            <a href="https://www.instagram.com/tabigi_balkz" target="_blank" rel="noopener noreferrer">
-              <img src="/images/instagram.png" alt="Instagram" />
-            </a>
-            <a href="https://t.me/+77007380979" target="_blank" rel="noopener noreferrer">
-              <img src="/images/telegram.png" alt="Telegram" />
-            </a>
-            <a href="https://wa.me/+7007380979" target="_blank" rel="noopener noreferrer">
-              <img src="/images/apple.png" alt="WhatsApp" />
-            </a>
+            <a href={whatsappUrl()} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"><WhatsAppIcon /></a>
+            <a href={CONTACTS.telegram} target="_blank" rel="noopener noreferrer" aria-label="Telegram"><TelegramIcon /></a>
+            <a href={CONTACTS.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram"><InstagramIcon /></a>
           </div>
         </div>
 
-        <div className="footer-contact">
-          <h3>Хабарласу үшін</h3>
-          <div className="contact-item">
-            <span className="contact-icon">📞</span>
-            <span>+7 700 738 0979</span>
-          </div>
-          <div className="contact-item">
-            <span className="contact-icon">📧</span>
-            <span>tabigi.ball@gmail.com</span>
-          </div>
+        <div>
+          <h4>Хабарласу</h4>
+          <ul className="footer-list">
+            <li><PhoneIcon /><a href={`tel:+${CONTACTS.phoneDigits}`}>{CONTACTS.phoneDisplay}</a></li>
+            <li><WhatsAppIcon /><a href={whatsappUrl()} target="_blank" rel="noopener noreferrer">WhatsApp-қа жазу</a></li>
+            <li><MailIcon /><a href={`mailto:${CONTACTS.email}`}>{CONTACTS.email}</a></li>
+          </ul>
         </div>
 
-        <div className="footer-location">
-          <h3>Тікелей бізден алу үшін</h3>
-          <div className="location-item">
-            <span className="location-icon">📍</span>
-            <span>Kazakhstan, Almaty, Shamalgan, Сауытқан 59</span>
-          </div>
-          <div className="location-item">
-            <span className="location-icon">🕒</span>
-            <span>Дүйсенбі - Сенбі: 9:00 - 18:00</span>
-          </div>
+        <div>
+          <h4>Өзіңіз келіп алу</h4>
+          <ul className="footer-list">
+            <li><PinIcon /><a href={CONTACTS.mapUrl} target="_blank" rel="noopener noreferrer">{CONTACTS.address}</a></li>
+            <li><ClockIcon /><span>{CONTACTS.hours}</span></li>
+          </ul>
         </div>
       </div>
-
-      <div className="copyright">
-        <p>© 2023 Tabigi Bal.</p>
+      <div className="container footer-bottom">
+        <span>© {new Date().getFullYear()} Tabigi Bal. Барлық құқықтар қорғалған.</span>
+        <a href="#top">Жоғарыға ↑</a>
       </div>
     </footer>
   );
