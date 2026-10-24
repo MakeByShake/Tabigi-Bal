@@ -5,7 +5,8 @@ const COOKIE = 'tb_admin';
 const MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
 function password() {
-  const p = process.env.ADMIN_PASSWORD;
+  // Spaces around the password (easy to paste by accident) are ignored.
+  const p = (process.env.ADMIN_PASSWORD || '').trim();
   if (!p) fail(503, 'ADMIN_PASSWORD is not set');
   return p;
 }
@@ -20,7 +21,7 @@ const safeEqual = (a, b) => {
 };
 
 export function checkPassword(input) {
-  const a = createHash('sha256').update(String(input || '')).digest();
+  const a = createHash('sha256').update(String(input || '').trim()).digest();
   const b = createHash('sha256').update(password()).digest();
   return timingSafeEqual(a, b);
 }
