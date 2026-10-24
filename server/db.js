@@ -9,7 +9,10 @@ export { DEFAULT_SETTINGS };
 let neonSql;
 export async function query(text, params = []) {
   if (globalThis.__TB_DEV_QUERY__) return globalThis.__TB_DEV_QUERY__(text, params);
-  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  // Vercel may add a custom prefix to the variable name (e.g. STORAGE_URL), so fall back
+  // to any variable that holds a Postgres connection string.
+  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL
+    || Object.values(process.env).find((v) => /^postgres(ql)?:\/\//.test(v || ''));
   if (!url) throw Object.assign(new Error('Database is not connected (DATABASE_URL missing)'), { status: 503 });
   neonSql ??= neon(url);
   return neonSql.query(text, params);
