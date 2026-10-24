@@ -68,15 +68,6 @@ const actions = {
   async logout(req, res) {
     send(res, 200, { ok: true }, { 'Set-Cookie': clearCookie() });
   },
-  // TEMP diagnostics for password setup: length and character kinds only, never the value.
-  async pwinfo(req, res) {
-    const raw = process.env.ADMIN_PASSWORD || '';
-    const t = raw.trim();
-    send(res, 200, {
-      set: !!raw, length: t.length, rawLength: raw.length, nonAscii: /[^\x20-\x7e]/.test(t),
-      commit: (process.env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 7), env: process.env.VERCEL_ENV,
-    });
-  },
   async me(req, res) {
     send(res, 200, { admin: isAdmin(req) });
   },
@@ -256,6 +247,6 @@ export default handle(async (req, res) => {
   const fn = actions[name];
   if (!fn) fail(404, 'Unknown action');
   res.setHeader('Cache-Control', 'no-store');
-  if (!['login', 'logout', 'me', 'pwinfo'].includes(name)) await ensureSchema();
+  if (!['login', 'logout', 'me'].includes(name)) await ensureSchema();
   await fn(req, res);
 });
