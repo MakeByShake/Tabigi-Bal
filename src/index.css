@@ -54,7 +54,10 @@ body {
   background: var(--cream);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* Safety net: nothing may push the page sideways on phones (clip keeps the sticky header working). */
+  overflow-x: clip;
 }
+html { overflow-x: hidden; }
 body.no-scroll { overflow: hidden; }
 
 img { display: block; max-width: 100%; }
@@ -529,7 +532,9 @@ h1, h2, h3, .section-heading { font-family: var(--font-display); font-weight: 60
   .chip-a { left: -6px; }
   .chip-b { right: -6px; }
 
-  .catalog-toolbar { flex-direction: column; align-items: stretch; }
+  /* nowrap: with wrap on, the column takes the chips' full content width and widens the page. */
+  .catalog-toolbar { flex-direction: column; flex-wrap: nowrap; align-items: stretch; }
+  .chips { min-width: 0; }
   .toolbar-right { min-width: 0; }
   .search { max-width: none; min-width: 0; }
   .sort { flex-shrink: 0; }
